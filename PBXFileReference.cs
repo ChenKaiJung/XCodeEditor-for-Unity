@@ -2,7 +2,7 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
-namespace UnityEditor.XCodeEditor
+namespace UnityEditor.MarqPlusEditor
 {
 	public class PBXFileReference : PBXObject
 	{

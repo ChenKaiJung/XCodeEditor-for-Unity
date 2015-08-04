@@ -3,7 +3,7 @@ using System.Collections;
 using System.IO;
 using Json = XMiniJSON;
 
-namespace UnityEditor.XCodeEditor 
+namespace UnityEditor.MarqPlusEditor 
 {
 	public class XCMod 
 	{
