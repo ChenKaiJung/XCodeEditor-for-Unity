@@ -16,6 +16,7 @@ namespace UnityEditor.MarqPlusEditor
 		private PBXDictionary _configurations;
 		
 		private PBXGroup _rootGroup;
+		private PBXVariantGroup _rootVariantGroup;
 		private string _defaultConfigurationName;
 		private string _rootObjectKey;
 	
@@ -31,6 +32,7 @@ namespace UnityEditor.MarqPlusEditor
 		// Objects
 		private PBXDictionary<PBXBuildFile> _buildFiles;
 		private PBXDictionary<PBXGroup> _groups;
+		private PBXDictionary<PBXVariantGroup> _variantGroups;
 		private PBXDictionary<PBXFileReference> _fileReferences;
 		private PBXDictionary<PBXNativeTarget> _nativeTargets;
 		
@@ -127,7 +129,7 @@ namespace UnityEditor.MarqPlusEditor
 				return _rootGroup;
 			}
 		}
-		
+
 		public PBXDictionary<PBXBuildFile> buildFiles {
 			get {
 				if( _buildFiles == null ) {
@@ -145,7 +147,16 @@ namespace UnityEditor.MarqPlusEditor
 				return _groups;
 			}
 		}
-		
+
+		public PBXDictionary<PBXVariantGroup> variantGroups {
+			get {
+				if( _variantGroups == null ) {
+					_variantGroups = new PBXDictionary<PBXVariantGroup>( _objects );
+				}
+				return _variantGroups;
+			}
+		}
+
 		public PBXDictionary<PBXFileReference> fileReferences {
 			get {
 				if( _fileReferences == null ) {
@@ -361,7 +372,112 @@ namespace UnityEditor.MarqPlusEditor
 //					return default(T);
 //			}
 //		}
-		
+		public PBXDictionary AddLocalization( string filePath, PBXVariantGroup parent = null, string tree = "SOURCE_ROOT", bool createBuildFiles = true, bool weak = false )
+		{
+			PBXDictionary results = new PBXDictionary();
+			string absPath = string.Empty;
+			
+			if( Path.IsPathRooted( filePath ) ) {
+				absPath = filePath;
+				//				Debug.Log( "Is rooted: " + absPath );
+			}
+			else if( tree.CompareTo( "SDKROOT" ) != 0) {
+				absPath = Path.Combine( Application.dataPath.Replace("Assets", ""), filePath );
+				//				Debug.Log( "RElative: " + absPath );
+			}
+			
+			if( !( File.Exists( absPath ) || Directory.Exists( absPath ) ) && tree.CompareTo( "SDKROOT" ) != 0 ) {
+				Debug.Log( "Missing file: " + absPath + " > " + filePath );
+				return results;
+			}
+			else if( tree.CompareTo( "SOURCE_ROOT" ) == 0 || tree.CompareTo( "GROUP" ) == 0 ) {
+				System.Uri fileURI = new System.Uri( absPath );
+				System.Uri rootURI = new System.Uri( ( projectRootPath + "/." ) );
+				filePath = rootURI.MakeRelativeUri( fileURI ).ToString();
+			}
+			//			else {
+			//				tree = "<absolute>";
+			//				Debug.Log( "3: " + filePath );
+			//			}
+			//			Debug.Log( "Add file result path: " + filePath );
+			
+
+			// TODO: Aggiungere controllo se file già presente
+			string filename=System.IO.Path.GetFileName (filePath);
+			PBXFileReference fileReference = GetFile (System.IO.Path.GetFileName (filePath));	
+			if (filename.CompareTo ("common.strings") != 0) {
+				if (fileReference != null) {
+					//				Debug.Log( "File già presente." );
+					return null;
+				}
+			}
+			fileReference = new PBXFileReference( filePath, (TreeEnum)System.Enum.Parse( typeof(TreeEnum), tree ) );
+			parent.AddChild( fileReference );
+			fileReferences.Add( fileReference );
+			results.Add( fileReference.guid, fileReference );
+			
+			//Create a build file for reference
+			if( !string.IsNullOrEmpty( fileReference.buildPhase ) && createBuildFiles ) {
+				//				PBXDictionary<PBXBuildPhase> currentPhase = GetBuildPhase( fileReference.buildPhase );
+				PBXBuildFile buildFile;
+				switch( fileReference.buildPhase ) {
+				case "PBXFrameworksBuildPhase":
+					foreach( KeyValuePair<string, PBXFrameworksBuildPhase> currentObject in frameworkBuildPhases ) {
+						buildFile = new PBXBuildFile( fileReference, weak );
+						buildFiles.Add( buildFile );
+						currentObject.Value.AddBuildFile( buildFile );
+					}
+					
+					if ( !string.IsNullOrEmpty( absPath ) && File.Exists(absPath) && tree.CompareTo( "SOURCE_ROOT" ) == 0 ) {
+						//Debug.LogError(absPath);
+						string libraryPath = Path.Combine( "$(SRCROOT)", Path.GetDirectoryName( filePath ) );
+						this.AddLibrarySearchPaths( new PBXList(libraryPath) );
+					}
+					else if (!string.IsNullOrEmpty( absPath ) && Directory.Exists(absPath) && absPath.EndsWith(".framework") && tree.CompareTo("GROUP") == 0) { // Annt: Add framework search path for FacebookSDK
+						string frameworkPath = Path.Combine( "$(SRCROOT)", Path.GetDirectoryName( filePath ) );
+						this.AddFrameworkSearchPaths(new PBXList(frameworkPath));
+					}
+					break;
+				case "PBXResourcesBuildPhase":
+					foreach( KeyValuePair<string, PBXResourcesBuildPhase> currentObject in resourcesBuildPhases ) {
+						buildFile = new PBXBuildFile( fileReference, weak );
+						buildFiles.Add( buildFile );
+						currentObject.Value.AddBuildFile( buildFile );
+					}
+					break;
+				case "PBXShellScriptBuildPhase":
+					foreach( KeyValuePair<string, PBXShellScriptBuildPhase> currentObject in shellScriptBuildPhases ) {
+						buildFile = new PBXBuildFile( fileReference, weak );
+						buildFiles.Add( buildFile );
+						currentObject.Value.AddBuildFile( buildFile );
+					}
+					break;
+				case "PBXSourcesBuildPhase":
+					foreach( KeyValuePair<string, PBXSourcesBuildPhase> currentObject in sourcesBuildPhases ) {
+						buildFile = new PBXBuildFile( fileReference, weak );
+						buildFiles.Add( buildFile );
+						currentObject.Value.AddBuildFile( buildFile );
+					}
+					break;
+				case "PBXCopyFilesBuildPhase":
+					foreach( KeyValuePair<string, PBXCopyFilesBuildPhase> currentObject in copyBuildPhases ) {
+						buildFile = new PBXBuildFile( fileReference, weak );
+						buildFiles.Add( buildFile );
+						currentObject.Value.AddBuildFile( buildFile );
+					}
+					break;
+				case null:
+					Debug.LogWarning( "fase non supportata null" );
+					break;
+				default:
+					Debug.LogWarning( "fase non supportata def" );
+					return null;
+				}
+			}
+
+			return results;
+		}
+
 		public PBXDictionary AddFile( string filePath, PBXGroup parent = null, string tree = "SOURCE_ROOT", bool createBuildFiles = true, bool weak = false )
 		{
 			PBXDictionary results = new PBXDictionary();
@@ -396,12 +512,12 @@ namespace UnityEditor.MarqPlusEditor
 			}
 			
 			// TODO: Aggiungere controllo se file già presente
-			PBXFileReference fileReference = GetFile( System.IO.Path.GetFileName( filePath ) );	
-			if( fileReference != null ) {
+			string filename=System.IO.Path.GetFileName (filePath);
+			PBXFileReference fileReference = GetFile (System.IO.Path.GetFileName (filePath));	
+			if (fileReference != null) {
 //				Debug.Log( "File già presente." );
 				return null;
 			}
-			
 			fileReference = new PBXFileReference( filePath, (TreeEnum)System.Enum.Parse( typeof(TreeEnum), tree ) );
 			parent.AddChild( fileReference );
 			fileReferences.Add( fileReference );
@@ -669,7 +785,36 @@ namespace UnityEditor.MarqPlusEditor
 			
 			return null;
 		}
+
+		public PBXVariantGroup GetVariantGroup( string name, string path = null, PBXGroup parent = null )
+		{
+			//			Debug.Log( "GetGroup: " + name + ", " + path + ", " + parent );
+			if( string.IsNullOrEmpty( name ) )
+				return null;
+
+			if( parent == null )
+				parent = _rootGroup;
+			
+			foreach( KeyValuePair<string, PBXVariantGroup> current in variantGroups ) {
+				
+				//				Debug.Log( "current: " + current.Value.guid + ", " + current.Value.name + ", " + current.Value.path + " - " + parent.HasChild( current.Key ) );
+				if( string.IsNullOrEmpty( current.Value.name ) ) { 
+					if( current.Value.path.CompareTo( name ) == 0 && parent.HasChild( current.Key ) ) {
+						return current.Value;
+					}
+				}
+				else if( current.Value.name.CompareTo( name ) == 0 && parent.HasChild( current.Key ) ) {
+					return current.Value;
+				}
+			}
 		
+			PBXVariantGroup result = new PBXVariantGroup( name, path );
+			variantGroups.Add( result );
+			parent.AddChild( result );
+			
+			modified = true;
+			return result;
+		}
 		
 		public PBXGroup GetGroup( string name, string path = null, PBXGroup parent = null )
 		{
@@ -943,7 +1088,14 @@ namespace UnityEditor.MarqPlusEditor
 				string completePath = System.IO.Path.Combine( "System/Library/Frameworks", filename[0] );
 				this.AddFile( completePath, frameworkGroup, "SDKROOT", true, isWeak );
 			}
-			
+
+			Debug.Log( "Adding localizations..." );
+			PBXVariantGroup localizationGroup = this.GetVariantGroup( "Localizations" );
+			foreach( string filePath in mod.localizations ) {
+				string absoluteFilePath = System.IO.Path.Combine( mod.path, filePath );
+				this.AddLocalization( absoluteFilePath, localizationGroup, "GROUP", true, false);
+			}
+
 			Debug.Log( "Adding files..." );
 			foreach( string filePath in mod.files ) {
 				string absoluteFilePath = System.IO.Path.Combine( mod.path, filePath );
@@ -1005,6 +1157,7 @@ namespace UnityEditor.MarqPlusEditor
 			PBXDictionary consolidated = new PBXDictionary();
 			consolidated.Append<PBXBuildFile>( this.buildFiles );
 			consolidated.Append<PBXGroup>( this.groups );
+			consolidated.Append<PBXVariantGroup>( this.variantGroups );
 			consolidated.Append<PBXFileReference>( this.fileReferences );
 //			consolidated.Append<PBXProject>( this.project );
 			consolidated.Append<PBXNativeTarget>( this.nativeTargets );
