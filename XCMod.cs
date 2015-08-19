@@ -50,7 +50,13 @@ namespace UnityEditor.MarqPlusEditor
 				return (ArrayList)_datastore["frameworks"];
 			}
 		}
-		
+
+		public ArrayList localizations {
+			get {
+				return (ArrayList)_datastore["localizations"];
+			}
+		}	
+
 		public ArrayList headerpaths {
 			get {
 				return (ArrayList)_datastore["headerpaths"];

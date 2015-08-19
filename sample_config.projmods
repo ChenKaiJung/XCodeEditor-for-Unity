@@ -2,6 +2,7 @@
     "group": "Services",
     "libs": ["libsqlite3.dylib"],
     "frameworks": ["MessageUI.framework","StoreKit.framework","iAd.framework","CoreData.framework","SystemConfiguration.framework","Social.framework:","Security.framework:","Accounts.framework:","AdSupport.framework:"],
+    "localizations": [],
     "headerpaths": [],                    
     "files": ["/Users/beannt/Documents/FacebookSDK/FacebookSDK.framework", "/Users/beannt/Documents/FacebookSDK/FacebookSDK.framework/Versions/A/Resources/FacebookSDKResources.bundle"],
     "folders": ["iOS/Store/","iOS/GoogleAnalytics/"],
