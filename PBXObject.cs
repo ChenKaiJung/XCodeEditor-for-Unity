@@ -148,7 +148,7 @@ namespace UnityEditor.MarqPlusEditor
 		public PBXReferenceProxy( string guid, PBXDictionary dictionary ) : base( guid, dictionary ) {	
 		}
 	}
-
+/*
 	public class PBXVariantGroup : PBXObject
 	{
 		public PBXVariantGroup() : base() {
@@ -157,4 +157,5 @@ namespace UnityEditor.MarqPlusEditor
 		public PBXVariantGroup( string guid, PBXDictionary dictionary ) : base( guid, dictionary ) {	
 		}
 	}
+	*/
 }
