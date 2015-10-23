@@ -269,7 +269,17 @@ namespace UnityEditor.MarqPlusEditor
 			modified = true;
 			return modified;	
 		}
-
+		
+		//ENABLE_BITCODE
+		public bool EnableBitCode (string value)
+		{
+			foreach( KeyValuePair<string, XCBuildConfiguration> buildConfig in buildConfigurations ) {
+				buildConfig.Value.EnableBitCode( value );
+			}
+			modified = true;
+			return modified;	
+		}
+		
 		public bool GccEnableCppExceptions (string value)
 		{
 			foreach( KeyValuePair<string, XCBuildConfiguration> buildConfig in buildConfigurations ) {
@@ -1132,6 +1142,12 @@ namespace UnityEditor.MarqPlusEditor
 						_linker = "-" + _linker;
 					this.AddOtherLDFlags( _linker );
 				}
+			}
+			
+			if( buildSettings.ContainsKey("ENABLE_BITCODE") )
+			{
+				Debug.Log( "    ENABLE_BITCODE = " + buildSettings["ENABLE_BITCODE"] );
+				this.EnableBitCode( (string) buildSettings["ENABLE_BITCODE"] );
 			}
 
 			if( buildSettings.ContainsKey("GCC_ENABLE_CPP_EXCEPTIONS") )

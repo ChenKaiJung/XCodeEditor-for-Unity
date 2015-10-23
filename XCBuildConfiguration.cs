@@ -13,6 +13,7 @@ namespace UnityEditor.MarqPlusEditor
 		protected const string OTHER_LD_FLAGS_KEY = "OTHER_LDFLAGS";
 		protected const string GCC_ENABLE_CPP_EXCEPTIONS_KEY = "GCC_ENABLE_CPP_EXCEPTIONS";
 		protected const string GCC_ENABLE_OBJC_EXCEPTIONS_KEY = "GCC_ENABLE_OBJC_EXCEPTIONS";
+		protected const string ENABLE_BITCODE_KEY = "ENABLE_BITCODE";
 
 		public XCBuildConfiguration( string guid, PBXDictionary dictionary ) : base( guid, dictionary )
 		{
@@ -156,7 +157,16 @@ namespace UnityEditor.MarqPlusEditor
 			
 			return modified;
 		}
+		
+		public bool EnableBitCode (string value)
+		{
+			if (!ContainsKey (BUILDSETTINGS_KEY))
+				this.Add (BUILDSETTINGS_KEY, new PBXDictionary ());
 
+			((PBXDictionary)_data [BUILDSETTINGS_KEY])[ENABLE_BITCODE_KEY] = value;
+			return true;
+		}
+		
 		public bool GccEnableCppExceptions (string value)
 		{
 			if (!ContainsKey (BUILDSETTINGS_KEY))
