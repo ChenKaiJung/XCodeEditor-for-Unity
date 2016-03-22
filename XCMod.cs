@@ -57,6 +57,12 @@ namespace UnityEditor.MarqPlusEditor
 			}
 		}	
 
+		public ArrayList embedBinaries {
+			get {
+				return (ArrayList)_datastore["embedBinaries"];
+			}
+		}
+
 		public ArrayList headerpaths {
 			get {
 				return (ArrayList)_datastore["headerpaths"];
