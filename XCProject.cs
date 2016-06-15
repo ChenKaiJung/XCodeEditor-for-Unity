@@ -523,6 +523,8 @@ namespace UnityEditor.MarqPlusEditor
 			buildFiles.Add( buildFile );//3. create and add a build file
 			buildFile.AddCodeSignOnCopy();
 
+			//TODO: Implement Add Framework for PBXBuildFile
+			/*
 			int buildActionMask = 0;
 			foreach( var currentObject in copyBuildPhases ) 
 			{
@@ -533,7 +535,7 @@ namespace UnityEditor.MarqPlusEditor
 
 			buildPhases.Add(embedPhase.guid);//add native target
 			copyBuildPhases.Add(embedPhase);
-
+			*/
 			return null;
 		}
 
