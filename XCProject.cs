@@ -1156,14 +1156,15 @@ namespace UnityEditor.MarqPlusEditor
 				string absoluteFilePath = System.IO.Path.Combine( mod.path, filePath );
 				this.AddLocalization( absoluteFilePath, localizationGroup, "GROUP", true, false);
 			}
-
+			//TODO: Implement the Embed Binary Feature
+			/*
 			Debug.Log( "Adding Embed Binary..." );
 			PBXGroup embedBinaryGroup = this.GetGroup( "EmbedBinary" );
 			foreach( XCModFile libRef in mod.embedBinaries ) {
 				string absoluteFilePath = System.IO.Path.Combine( mod.path, filePath );
 				this.AddEmbedFramework( absoluteFilePath);
 			}
-
+			*/
 			Debug.Log( "Adding files..." );
 			foreach( string filePath in mod.files ) {
 				string absoluteFilePath = System.IO.Path.Combine( mod.path, filePath );
