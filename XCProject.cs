@@ -1,3 +1,4 @@
+#pragma warning disable 0219
 using UnityEngine;
 using UnityEditor;
 using System.Collections;
