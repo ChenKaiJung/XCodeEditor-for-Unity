@@ -489,6 +489,111 @@ namespace UnityEditor.MarqPlusEditor
 			return results;
 		}
 
+		public PBXDictionary AddInfoLocalization( string filePath, PBXVariantGroup parent = null, string tree = "SOURCE_ROOT", bool createBuildFiles = true, bool weak = false )
+		{
+			PBXDictionary results = new PBXDictionary();
+			string absPath = string.Empty;
+			
+			if( Path.IsPathRooted( filePath ) ) {
+				absPath = filePath;
+				//				Debug.Log( "Is rooted: " + absPath );
+			}
+			else if( tree.CompareTo( "SDKROOT" ) != 0) {
+				absPath = Path.Combine( Application.dataPath.Replace("Assets", ""), filePath );
+				//				Debug.Log( "RElative: " + absPath );
+			}
+			
+			if( !( File.Exists( absPath ) || Directory.Exists( absPath ) ) && tree.CompareTo( "SDKROOT" ) != 0 ) {
+				Debug.Log( "Missing file: " + absPath + " > " + filePath );
+				return results;
+			}
+			else if( tree.CompareTo( "SOURCE_ROOT" ) == 0 || tree.CompareTo( "GROUP" ) == 0 ) {
+				System.Uri fileURI = new System.Uri( absPath );
+				System.Uri rootURI = new System.Uri( ( projectRootPath + "/." ) );
+				filePath = rootURI.MakeRelativeUri( fileURI ).ToString();
+			}
+			//			else {
+			//				tree = "<absolute>";
+			//				Debug.Log( "3: " + filePath );
+			//			}
+			//			Debug.Log( "Add file result path: " + filePath );
+			
+
+			// TODO: Aggiungere controllo se file già presente
+			string filename=System.IO.Path.GetFileName (filePath);
+			PBXFileReference fileReference = GetFile (System.IO.Path.GetFileName (filePath));	
+			if (filename.CompareTo ("info.plist") != 0) {
+				if (fileReference != null) {
+					//				Debug.Log( "File già presente." );
+					return null;
+				}
+			}
+			fileReference = new PBXFileReference( filePath, (TreeEnum)System.Enum.Parse( typeof(TreeEnum), tree ) );
+			parent.AddChild( fileReference );
+			fileReferences.Add( fileReference );
+			results.Add( fileReference.guid, fileReference );
+			
+			//Create a build file for reference
+			if( !string.IsNullOrEmpty( fileReference.buildPhase ) && createBuildFiles ) {
+				//				PBXDictionary<PBXBuildPhase> currentPhase = GetBuildPhase( fileReference.buildPhase );
+				PBXBuildFile buildFile;
+				switch( fileReference.buildPhase ) {
+				case "PBXFrameworksBuildPhase":
+					foreach( KeyValuePair<string, PBXFrameworksBuildPhase> currentObject in frameworkBuildPhases ) {
+						buildFile = new PBXBuildFile( fileReference, weak );
+						buildFiles.Add( buildFile );
+						currentObject.Value.AddBuildFile( buildFile );
+					}
+					
+					if ( !string.IsNullOrEmpty( absPath ) && File.Exists(absPath) && tree.CompareTo( "SOURCE_ROOT" ) == 0 ) {
+						//Debug.LogError(absPath);
+						string libraryPath = Path.Combine( "$(SRCROOT)", Path.GetDirectoryName( filePath ) );
+						this.AddLibrarySearchPaths( new PBXList(libraryPath) );
+					}
+					else if (!string.IsNullOrEmpty( absPath ) && Directory.Exists(absPath) && absPath.EndsWith(".framework") && tree.CompareTo("GROUP") == 0) { // Annt: Add framework search path for FacebookSDK
+						string frameworkPath = Path.Combine( "$(SRCROOT)", Path.GetDirectoryName( filePath ) );
+						this.AddFrameworkSearchPaths(new PBXList(frameworkPath));
+					}
+					break;
+				case "PBXResourcesBuildPhase":
+					foreach( KeyValuePair<string, PBXResourcesBuildPhase> currentObject in resourcesBuildPhases ) {
+						buildFile = new PBXBuildFile( fileReference, weak );
+						buildFiles.Add( buildFile );
+						currentObject.Value.AddBuildFile( buildFile );
+					}
+					break;
+				case "PBXShellScriptBuildPhase":
+					foreach( KeyValuePair<string, PBXShellScriptBuildPhase> currentObject in shellScriptBuildPhases ) {
+						buildFile = new PBXBuildFile( fileReference, weak );
+						buildFiles.Add( buildFile );
+						currentObject.Value.AddBuildFile( buildFile );
+					}
+					break;
+				case "PBXSourcesBuildPhase":
+					foreach( KeyValuePair<string, PBXSourcesBuildPhase> currentObject in sourcesBuildPhases ) {
+						buildFile = new PBXBuildFile( fileReference, weak );
+						buildFiles.Add( buildFile );
+						currentObject.Value.AddBuildFile( buildFile );
+					}
+					break;
+				case "PBXCopyFilesBuildPhase":
+					foreach( KeyValuePair<string, PBXCopyFilesBuildPhase> currentObject in copyBuildPhases ) {
+						buildFile = new PBXBuildFile( fileReference, weak );
+						buildFiles.Add( buildFile );
+						currentObject.Value.AddBuildFile( buildFile );
+					}
+					break;
+				case null:
+					Debug.LogWarning( "fase non supportata null" );
+					break;
+				default:
+					Debug.LogWarning( "fase non supportata def" );
+					return null;
+				}
+			}
+
+			return results;
+		}
 		public PBXDictionary AddEmbedFramework( string fileName)
 		{
 			Debug.Log( "Add Embed Framework: " + fileName );
@@ -1156,6 +1261,13 @@ namespace UnityEditor.MarqPlusEditor
 			foreach( string filePath in mod.localizations ) {
 				string absoluteFilePath = System.IO.Path.Combine( mod.path, filePath );
 				this.AddLocalization( absoluteFilePath, localizationGroup, "GROUP", true, false);
+			}
+
+			Debug.Log( "Adding infoLocalizations..." );
+			PBXVariantGroup localizationGroup = this.GetVariantGroup( "infoLocalizations" );
+			foreach( string filePath in mod.localizations ) {
+				string absoluteFilePath = System.IO.Path.Combine( mod.path, filePath );
+				this.AddInfoLocalization( absoluteFilePath, localizationGroup, "GROUP", true, false);
 			}
 			//TODO: Implement the Embed Binary Feature
 			/*
