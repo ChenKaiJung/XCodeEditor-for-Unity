@@ -6,7 +6,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
 
-namespace UnityEditor.MarqPlusEditor
+namespace UnityEditor.CoreSDKEditor
+
 {
 	public partial class XCProject : System.IDisposable
 	{

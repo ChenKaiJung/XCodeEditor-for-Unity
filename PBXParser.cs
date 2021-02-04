@@ -6,7 +6,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 
 
-namespace UnityEditor.MarqPlusEditor
+namespace UnityEditor.CoreSDKEditor
 {
 	public class PBXParser
 	{

@@ -3,7 +3,7 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
-namespace UnityEditor.MarqPlusEditor
+namespace UnityEditor.CoreSDKEditor
 {
 	public class PBXVariantGroup : PBXGroup
 	{

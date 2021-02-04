@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections;
 
-namespace UnityEditor.MarqPlusEditor
+namespace UnityEditor.CoreSDKEditor
 {
 	public class XCTarget : System.IDisposable
 	{
